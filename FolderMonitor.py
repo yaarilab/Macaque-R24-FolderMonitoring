@@ -8,12 +8,14 @@ import requests
 from tabulate import tabulate
 from datetime import datetime
 from openpyxl import load_workbook
+from collections import defaultdict
 
 
 
 SOURCE_PATH = r"/misc/work/"
 #SOURCE_PATH = r"C:\Users\yaniv\Desktop"
 
+FOLDER_FOR_DOWNLOADS = os.path.join(SOURCE_PATH, "Dropbox/Macaque R24/sequencing/")
 METADATA_SCHEMA_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/jsonFormats/schema.json')
 METADATA_FILE_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/subject_metadata/metadata.xlsx')
 AIRR_SCHEMA_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/jsonFormats/airr-schema.json')
@@ -54,36 +56,6 @@ class FolderMonitor():
             with open(ALL_PIPELINE_FILES_PATH, "w") as new_file:
                 print(ALL_PIPELINE_FILES_PATH + " created")
 
-
-    # def load_counters_values(self): #loading the updated values of samples counters from the json file
-    #     if os.path.exists("counters.json"):
-    #         with open("counters.json", "r") as file:
-    #             data = json.load(file)
-    #             self.total_subjects_with_airr_sample = data.get("total_subjects_with_airr_sample", 0)
-    #             self.total_subjects_with_genomic_sample = data.get("total_subjects_with_genomic_sample", 0)
-    #             self.total_samples_airr = data.get("total_samples_airr", 0)
-    #             self.total_samples_genomic = data.get("total_samples_genomic", 0)
-    #             self.airr_missing_files = data.get("airr_missing_files", 0)
-    #             self.genomic_missing_files = data.get("genomic_missing_files", 0)
-    #             self.subjects_missing_metadata = data.get("subjects_missing_metadata", 0)
-
-
-    # def save_counters_values(self): #saving samples counters after a run
-    #     data = {
-    #         "total_subjects_with_airr_sample": self.total_subjects_with_airr_sample,
-    #         "total_subjects_with_genomic_sample": self.total_subjects_with_genomic_sample,
-    #         "total_samples_airr": self.total_samples_airr,
-    #         "total_samples_genomic": self.total_samples_genomic,
-    #         "airr_missing_files": self.airr_missing_files,
-    #         "genomic_missing_files": self.genomic_missing_files,
-    #         "subjects_missing_metadata": self.subjects_missing_metadata
-    #     }
-    #     with open("counters.json", "w") as file:
-    #         json.dump(data, file)
-    
-    # def reset_counters_values(self):
-    #     self.air_samples_from_past_24 = 0
-    #     self.genomic_samples_from_past_24 = 0
 
     def get_file_name_from_file_path(self, file_path): #getting the file name from a path
         parts = file_path.split("/")
