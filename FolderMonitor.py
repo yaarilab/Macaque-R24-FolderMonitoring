@@ -255,7 +255,7 @@ class FolderMonitor():
                         ready_for_pipeline_file.write(line_in_pipeline_file + "\n")
                         all_pipeline_files.write(line_in_pipeline_file + "\n")
 
-    def count_repertoires(base_path):
+    def count_repertoires(self, base_path):
         # This dictionary will hold the counts of each repertoire type
         repertoire_counts = defaultdict(int)
 
