@@ -113,41 +113,48 @@ class ServerDropbox():
         for root, dirs, files in os.walk(local_folder_path, followlinks=True):  # followlinks=True to traverse into directories pointed to by symlinks
             for filename in files:
                 local_path = os.path.join(root, filename)
-                print(local_path)
                 # Handle symbolic links for files
                 if os.path.islink(local_path):
                     local_path = '/misc' + os.path.realpath(local_path)
                 
                 #relative_path = os.path.relpath(local_path, local_folder_path)
-                dropbox_path = dropbox_folder_path.replace("\\", "/")
-                
+                after_substring = extract_after_substring(local_path, '/misc/work/Dropbox/Macaque R24/results')
+                dropbox_path = dropbox_folder_path.replace("\\", "/") + after_substring
+
                 self.upload_file(local_path, dropbox_path)
 
-            resolved_dirs = []
-            for dirname in dirs:
-                self.create_folder_in_dropbox(os.path.join(dropbox_folder_path, dirname).replace("\\", "/"))
+            #for dirname in dirs:
+            #    self.create_folder_in_dropbox(os.path.join(dropbox_folder_path, dirname).replace("\\", "/"))
 
             # Upload contents of resolved directories
-            for resolved_dir, dropbox_resolved_dir in resolved_dirs:
-                self.upload_folder(resolved_dir, dropbox_resolved_dir)
+            #for resolved_dir, dropbox_resolved_dir in resolved_dirs:
+            #    self.upload_folder(resolved_dir, dropbox_resolved_dir)
 
     def upload_file(self, local_file_path, dropbox_file_path):
         """
         Uploads a single file to Dropbox.
         """
-        if os.path.isdir(local_file_path):
-            self.upload_folder(local_file_path,dropbox_file_path)
-        
-        else:
-            with open(local_file_path, 'rb') as f:
-                self.connected_dropbox.files_upload(f.read(), dropbox_file_path, mode=dropbox.files.WriteMode('overwrite'))
-                print(f"File '{dropbox_file_path}' updated successfully.")
+        try:
+            if os.path.isdir(local_file_path):
+                self.upload_folder(local_file_path, dropbox_file_path)
+            else:
+                with open(local_file_path, 'rb') as f:
+                    self.connected_dropbox.files_upload(f.read(), dropbox_file_path, mode=dropbox.files.WriteMode('overwrite'))
+        except FileNotFoundError:
+            print(f"File not found: {local_file_path}")
+        except PermissionError:
+            print(f"Permission denied for file: {local_file_path}")
+        except dropbox.exceptions.ApiError as e:
+            print(f"Dropbox API error: {e} \nfor file: {local_file_path}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e} \nfor file: {local_file_path}")
 
     def create_folder_in_dropbox(self, dropbox_folder_path):
         """
         Creates a folder in Dropbox if it doesn't already exist.
         """
         try:
+            print("creating folder - ", dropbox_folder_path)
             self.connected_dropbox.files_create_folder_v2(dropbox_folder_path)
         except dropbox.exceptions.ApiError as e:
             if e.error.is_path() and e.error.get_path().is_conflict():
@@ -156,3 +163,11 @@ class ServerDropbox():
                 raise
 
     
+
+def extract_after_substring(full_path, substring):
+    # Splitting the path based on the substring and taking the part after it
+    parts = full_path.split(substring)
+    if len(parts) > 1:
+        return parts[1]
+    else:
+        return ""
