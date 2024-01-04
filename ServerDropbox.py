@@ -134,12 +134,19 @@ class ServerDropbox():
         """
         Uploads a single file to Dropbox.
         """
+        MAX_FILE_SIZE = 150 * 1024 * 1024 
+
         try:
             if os.path.isdir(local_file_path):
+                print("is dir - ", local_file_path)
                 self.upload_folder(local_file_path, dropbox_file_path)
             else:
-                with open(local_file_path, 'rb') as f:
-                    self.connected_dropbox.files_upload(f.read(), dropbox_file_path, mode=dropbox.files.WriteMode('overwrite'))
+                file_size = os.path.getsize(local_file_path)
+                if file_size > MAX_FILE_SIZE:
+                    print(f"File is too large to upload: {file_size} bytes. Limit is {MAX_FILE_SIZE} bytes.")
+                else:
+                    with open(local_file_path, 'rb') as f:
+                        self.connected_dropbox.files_upload(f.read(), dropbox_file_path, mode=dropbox.files.WriteMode('overwrite'))
         except FileNotFoundError:
             print(f"File not found: {local_file_path}")
         except PermissionError:
