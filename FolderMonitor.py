@@ -11,8 +11,8 @@ from openpyxl import load_workbook
 
 
 
-#SOURCE_PATH = r"/misc/work"
-SOURCE_PATH = r"C:\Users\yaniv\Desktop"
+SOURCE_PATH = r"/misc/work/"
+#SOURCE_PATH = r"C:\Users\yaniv\Desktop"
 
 METADATA_SCHEMA_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/jsonFormats/schema.json')
 METADATA_FILE_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/subject_metadata/metadata.xlsx')
@@ -283,19 +283,43 @@ class FolderMonitor():
                         ready_for_pipeline_file.write(line_in_pipeline_file + "\n")
                         all_pipeline_files.write(line_in_pipeline_file + "\n")
 
+    def count_repertoires(base_path):
+        # This dictionary will hold the counts of each repertoire type
+        repertoire_counts = defaultdict(int)
 
+        # Walking through the directory structure
+        for root, dirs, files in os.walk(base_path):
+            for file in files:
+                # Check if the file is a .fastq file
+                if file.endswith('.fastq'):
+                    # Check for the presence of IGH, IGK, and IGL in the file name
+                    if 'IGH' in file:
+                        repertoire_counts['IGH'] += 1
+                    elif 'IGK' in file:
+                        repertoire_counts['IGK'] += 1
+                    elif 'IGL' in file:
+                        repertoire_counts['IGL'] += 1
+        
+        # Returning the counts as a dictionary
+        return dict(repertoire_counts)
+
+    
     def end_of_day_summary(self):
+        dict_counter = self.count_repertoires(FOLDER_FOR_DOWNLOADS)
         self.total_samples_airr +=  self.air_samples_from_past_24
         self.total_samples_genomic +=  self.genomic_samples_from_past_24
-        table_data1, table_data2 = self.create_slack_table()
+        table_data1, table_data2 ,table_data3 = self.create_slack_table(dict_counter)
         table1 = tabulate(table_data1, tablefmt="fancy_grid")
         table2 = tabulate(table_data2, tablefmt="fancy_grid")
+        table3 = tabulate(table_data3, tablefmt="fancy_grid")
+
         self.send_slack_message("```\n" + table1 + "\n```")
         self.send_slack_message("```\n" + table2 + "\n```")
+        self.send_slack_message("```\n" + table3 + "\n```")
         
 
 
-    def create_slack_table(self):
+    def create_slack_table(self,dict_counter):
         today = datetime.now().strftime("%B %d, %Y")  # Format the date as "Month Day, Year"
 
         table1 = [
@@ -307,11 +331,21 @@ class FolderMonitor():
         ]
 
         table2 = [
-            [f"{today}", f""],
+            [f"Repertoires", f""],
+            ["Subjects missing metadata", f"{self.subjects_missing_metadata}"],
+            ["Subjects missing metadata", f"{self.subjects_missing_metadata}"],
             ["Subjects missing metadata", f"{self.subjects_missing_metadata}"]
+
         ]
 
-        return table1, table2
+        table3 = [
+            ["Repertoires", ""],
+            ["IGH", f"{dict_counter['IGH']}"],
+            ["IGK", f"{dict_counter['IGK']}"],
+            ["IGL", f"{dict_counter['IGL']}"]
+        ]
+
+        return table1, table2, table3
     
     def send_slack_message(self, message):
         payload = {
