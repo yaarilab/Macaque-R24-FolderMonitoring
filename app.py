@@ -31,6 +31,7 @@ def monitor_dropbox_folder():
     folder_monitor = FolderMonitor()  # Initialize FolderMonitor class
     start_new_check(server_dropbox, folder_monitor)
     print("finish daily run")
+    print("start to upload result folder")
     server_dropbox.upload_folder(RESULT_FOLDER_PATH,DROPBOX_RESULT_PATH)
 
 # Function to initiate a new Dropbox folder check
@@ -90,3 +91,4 @@ def update_samples_file(past_day_subjects):
 # Main function
 if __name__ == "__main__":
     monitor_dropbox_folder()
+
