@@ -23,7 +23,9 @@ GENOMIC_SCHEMA_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/jsonFormats
 FILE_TO_RUN_IN_PIPELINE_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/ready_for_pipline/pipeline_files.txt') 
 ALL_PIPELINE_FILES_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/ready_for_pipline/all_pipeline_files.txt') 
 PIPELINE_TABLE_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/analysis/') 
-EXCEL_FILE_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/results/missing.xlsx')
+EXCEL_FILE_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/results/missing_metadata.xlsx')
+REPERTOIRES_CSV_FILE_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/results/subjects_repertoires.csv')
+
 WEBHOOK_URL = ''
 NOT_FOUND = -1
 
@@ -51,9 +53,9 @@ class FolderMonitor():
         self.add_one_for_genomic = False
         self.past_24_sample = []
         self.reset_excel_file = True
-        self.IGH_counter = 0 
-        self.IGL_counter = 0 
-        self.IGK_counter = 0 
+        self.total_IGH = 0 
+        self.total_IGL = 0 
+        self.total_IGK = 0 
 
         if not os.path.exists(ALL_PIPELINE_FILES_PATH):
         # If the file doesn't exist, create it and write some initial content
@@ -260,27 +262,57 @@ class FolderMonitor():
                         all_pipeline_files.write(line_in_pipeline_file + "\n")
 
     def count_repertoires(self, base_path):
-        # This dictionary will hold the counts of each repertoire type
         subjects = os.listdir(base_path)
+        igh_subjects , igk_subjects, igl_subjects = 0, 0, 0
         for subject in subjects:
+            subject_has_igh, subject_has_igk, subject_has_igl = False, False, False
             if subject != "all_samples_file.txt":
-                subject_path = os.path.join(base_path, subject) #old/subject
+                subject_path = os.path.join(base_path, subject)
                 samples = os.listdir(subject_path)
                 for sample in samples:
-                    sample_path = os.path.join(subject_path, sample)#old/subject/sample
+                    sample_path = os.path.join(subject_path, sample)
                     runs = os.listdir(sample_path)
                     for run in runs:
-                        run_path = os.path.join(sample_path, run)#old/subject/sample/run
+                        run_path = os.path.join(sample_path, run)
                         files = os.listdir(run_path)
                         for file in files:
                             if 'igh' in file.lower():
-                                self.IGH_counter += 1
+                                subject_has_igh = True
+                                self.total_IGH += 1
                             elif 'igk' in file.lower():
-                                self.IGK_counter += 1
+                                subject_has_igk = True
+                                self.total_IGK += 1
                             elif 'igl' in file.lower():
-                                self.IGL_counter += 1
+                                subject_has_igl = True
+                                self.total_IGL += 1
+            
+            if subject_has_igh:
+                igh_subjects += 1
+            
+            if subject_has_igk:
+                igk_subjects += 1
+            
+            if subject_has_igl:
+                igl_subjects += 1
+        
+        self.create_repertoires_csv(igh_subjects ,igk_subjects, igl_subjects)
 
-    
+
+
+    def create_repertoires_csv(self, igh_count, igk_count, igl_count):
+        column_headers = ['IGH', 'IGL', 'IGK']
+
+        if os.path.exists(REPERTOIRES_CSV_FILE_PATH):
+        # Delete the file
+            os.remove(REPERTOIRES_CSV_FILE_PATH)
+
+        df = pd.DataFrame(columns=column_headers)
+        
+        data_row = {'IGH': igh_count, 'IGL': igl_count, 'IGK': igk_count}
+        df = df.append(data_row, ignore_index=True)
+
+        df.to_csv(REPERTOIRES_CSV_FILE_PATH, index=False)
+
     def end_of_day_summary(self):
         self.count_repertoires(FOLDER_FOR_DOWNLOADS)
         self.total_samples_airr +=  self.air_samples_from_past_24
@@ -313,9 +345,9 @@ class FolderMonitor():
 
         table3 = [
             ["Repertoires", ""],
-            ["IGH", f"{self.IGH_counter}"],
-            ["IGK", f"{self.IGK_counter}"],
-            ["IGL", f"{self.IGL_counter}"]
+            ["IGH", f"{self.total_IGH}"],
+            ["IGK", f"{self.total_IGK}"],
+            ["IGL", f"{self.total_IGL}"]
         ]
 
         return table1, table2, table3
