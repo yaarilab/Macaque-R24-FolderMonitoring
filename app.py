@@ -32,7 +32,7 @@ def monitor_dropbox_folder():
     start_new_check(server_dropbox, folder_monitor)
     print("finish daily run")
     print("start to upload result folder")
-    server_dropbox.upload_folder(RESULT_FOLDER_PATH,DROPBOX_RESULT_PATH)
+#    server_dropbox.upload_folder(RESULT_FOLDER_PATH,DROPBOX_RESULT_PATH)
 
 # Function to initiate a new Dropbox folder check
 def start_new_check(server_dropbox, folder_monitor):

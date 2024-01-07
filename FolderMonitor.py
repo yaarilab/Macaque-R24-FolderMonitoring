@@ -51,6 +51,10 @@ class FolderMonitor():
         self.add_one_for_genomic = False
         self.past_24_sample = []
         self.reset_excel_file = True
+        self.IGH_counter = 0 
+        self.IGL_counter = 0 
+        self.IGK_counter = 0 
+
         if not os.path.exists(ALL_PIPELINE_FILES_PATH):
         # If the file doesn't exist, create it and write some initial content
             with open(ALL_PIPELINE_FILES_PATH, "w") as new_file:
@@ -257,30 +261,31 @@ class FolderMonitor():
 
     def count_repertoires(self, base_path):
         # This dictionary will hold the counts of each repertoire type
-        repertoire_counts = defaultdict(int)
-
-        # Walking through the directory structure
-        for root, dirs, files in os.walk(base_path):
-            for file in files:
-                # Check if the file is a .fastq file
-                if file.endswith('.fastq'):
-                    # Check for the presence of IGH, IGK, and IGL in the file name
-                    if 'IGH' in file:
-                        repertoire_counts['IGH'] += 1
-                    elif 'IGK' in file:
-                        repertoire_counts['IGK'] += 1
-                    elif 'IGL' in file:
-                        repertoire_counts['IGL'] += 1
-        
-        # Returning the counts as a dictionary
-        return dict(repertoire_counts)
+        subjects = os.listdir(base_path)
+        for subject in subjects:
+            if subject != "all_samples_file.txt":
+                subject_path = os.path.join(base_path, subject) #old/subject
+                samples = os.listdir(subject_path)
+                for sample in samples:
+                    sample_path = os.path.join(subject_path, sample)#old/subject/sample
+                    runs = os.listdir(sample_path)
+                    for run in runs:
+                        run_path = os.path.join(sample_path, run)#old/subject/sample/run
+                        files = os.listdir(run_path)
+                        for file in files:
+                            if 'igh' in file.lower():
+                                self.IGH_counter += 1
+                            elif 'igk' in file.lower():
+                                self.IGK_counter += 1
+                            elif 'igl' in file.lower():
+                                self.IGL_counter += 1
 
     
     def end_of_day_summary(self):
-        dict_counter = self.count_repertoires(FOLDER_FOR_DOWNLOADS)
+        self.count_repertoires(FOLDER_FOR_DOWNLOADS)
         self.total_samples_airr +=  self.air_samples_from_past_24
         self.total_samples_genomic +=  self.genomic_samples_from_past_24
-        table_data1, table_data2 ,table_data3 = self.create_slack_table(dict_counter)
+        table_data1, table_data2 ,table_data3 = self.create_slack_table()
         table1 = tabulate(table_data1, tablefmt="fancy_grid")
         table2 = tabulate(table_data2, tablefmt="fancy_grid")
         table3 = tabulate(table_data3, tablefmt="fancy_grid")
@@ -291,7 +296,7 @@ class FolderMonitor():
         
 
 
-    def create_slack_table(self,dict_counter):
+    def create_slack_table(self):
         today = datetime.now().strftime("%B %d, %Y")  # Format the date as "Month Day, Year"
 
         table1 = [
@@ -303,18 +308,14 @@ class FolderMonitor():
         ]
 
         table2 = [
-            [f"Repertoires", f""],
-            ["Subjects missing metadata", f"{self.subjects_missing_metadata}"],
-            ["Subjects missing metadata", f"{self.subjects_missing_metadata}"],
             ["Subjects missing metadata", f"{self.subjects_missing_metadata}"]
-
         ]
 
         table3 = [
             ["Repertoires", ""],
-            ["IGH", f"{dict_counter['IGH']}"],
-            ["IGK", f"{dict_counter['IGK']}"],
-            ["IGL", f"{dict_counter['IGL']}"]
+            ["IGH", f"{self.IGH_counter}"],
+            ["IGK", f"{self.IGK_counter}"],
+            ["IGL", f"{self.IGL_counter}"]
         ]
 
         return table1, table2, table3
