@@ -6,6 +6,7 @@ import json
 
 SOURCE_PATH = r"/misc/work"
 #SOURCE_PATH = r"C:\Users\yaniv\Desktop"
+ANNOTATED_CURRENT_RESULTS = os.path.realpath(r'/misc/work/sequence_data_store/Macaque_R24/runs/current/annotated/') 
 
 class ServerDropbox():
     def __init__(self):
@@ -18,6 +19,8 @@ class ServerDropbox():
         self.connected_dropbox = None
         self.download_list = []
         self.sample_list = []
+        self.result_folders_filter = ['genotype_report', 'ogrdbstats_third_alignment', 'rearrangements']
+        self.result_files_to_upload = ['missing_metadata.xlsx', 'subjects_repertoires.csv']
 
     
     def refresh_access_token(self):
@@ -106,6 +109,16 @@ class ServerDropbox():
             self.download_entry(entry, entry_local_path)
 
     
+    def start_upload_results(self, results_folder_path, symlink_results_to_copy, dropbox_result_path):
+        real_path = os.path.realpath(symlink_results_to_copy)
+        self.upload_folder(real_path, dropbox_result_path)
+        for file in self.result_files_to_upload:
+            file_path = os.path.join(results_folder_path, file)
+            dropbox_file_path = os.path.join(dropbox_result_path, file).replace("\\", "/")
+            self.upload_file(file_path ,dropbox_file_path, True)
+        
+
+    
     def upload_folder(self, local_folder_path, dropbox_folder_path):
         """
         Uploads the contents of a local folder to a Dropbox folder, handling symbolic links.
@@ -117,36 +130,34 @@ class ServerDropbox():
                 if os.path.islink(local_path):
                     local_path = '/misc' + os.path.realpath(local_path)
                 
-                #relative_path = os.path.relpath(local_path, local_folder_path)
-                after_substring = extract_after_substring(local_path, '/misc/work/Dropbox/Macaque R24/results')
-                dropbox_path = dropbox_folder_path.replace("\\", "/") + after_substring
+                after_substring = extract_after_substring(local_path, ANNOTATED_CURRENT_RESULTS)
+                dropbox_path = dropbox_folder_path.replace("\\", "/") + after_substring.replace("\\", "/")
 
-                self.upload_file(local_path, dropbox_path)
+                self.upload_file(local_path, dropbox_path, False)
 
-            #for dirname in dirs:
-            #    self.create_folder_in_dropbox(os.path.join(dropbox_folder_path, dirname).replace("\\", "/"))
 
-            # Upload contents of resolved directories
-            #for resolved_dir, dropbox_resolved_dir in resolved_dirs:
-            #    self.upload_folder(resolved_dir, dropbox_resolved_dir)
-
-    def upload_file(self, local_file_path, dropbox_file_path):
+    def upload_file(self, local_file_path, dropbox_file_path, just_file):
         """
         Uploads a single file to Dropbox.
         """
-        MAX_FILE_SIZE = 150 * 1024 * 1024 
+        is_present = False
+        MAX_FILE_SIZE = 150 * 1024 * 1024
+        for folder_name in self.result_folders_filter:
+            if folder_name in local_file_path:
+                is_present = True
 
         try:
-            if os.path.isdir(local_file_path):
-                print("is dir - ", local_file_path)
-                self.upload_folder(local_file_path, dropbox_file_path)
-            else:
-                file_size = os.path.getsize(local_file_path)
-                if file_size > MAX_FILE_SIZE:
-                    print(f"File is too large to upload: {file_size} bytes. Limit is {MAX_FILE_SIZE} bytes.")
+            if is_present or just_file:
+                if os.path.isdir(local_file_path):
+                    print("is dir - ", local_file_path)
+                    self.upload_folder(local_file_path, dropbox_file_path)
                 else:
-                    with open(local_file_path, 'rb') as f:
-                        self.connected_dropbox.files_upload(f.read(), dropbox_file_path, mode=dropbox.files.WriteMode('overwrite'))
+                    file_size = os.path.getsize(local_file_path)
+                    if file_size > MAX_FILE_SIZE:
+                        print(f"File is too large to upload: {file_size} bytes. Limit is {MAX_FILE_SIZE} bytes.")
+                    else:
+                        with open(local_file_path, 'rb') as f:
+                            self.connected_dropbox.files_upload(f.read(), dropbox_file_path, mode=dropbox.files.WriteMode('overwrite'))
         except FileNotFoundError:
             print(f"File not found: {local_file_path}")
         except PermissionError:

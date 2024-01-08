@@ -20,6 +20,7 @@ SERVER_MISSING_FILE_PATH = os.path.join(SOURCE_PATH, 'Macaque R24/results/missin
 ALL_SAMPLES_PATH = os.path.join(SOURCE_PATH, 'Macaque R24/sequencing/all_samples_file.txt') 
 RESULT_FOLDER_PATH = os.path.join(SOURCE_PATH, 'Macaque R24/results')
 DROPBOX_RESULT_PATH = '/macaque r24/results'.lower()
+ANNOTATED_CURRENT_RESULTS = r'/misc/work/sequence_data_store/Macaque_R24/runs/current/annotated/'
 
 # Function to monitor Dropbox folder
 def monitor_dropbox_folder():
@@ -32,7 +33,7 @@ def monitor_dropbox_folder():
     start_new_check(server_dropbox, folder_monitor)
     print("finish daily run")
     print("start to upload result folder")
-#    server_dropbox.upload_folder(RESULT_FOLDER_PATH,DROPBOX_RESULT_PATH)
+    server_dropbox.start_upload_results(RESULT_FOLDER_PATH, ANNOTATED_CURRENT_RESULTS, DROPBOX_RESULT_PATH)
 
 # Function to initiate a new Dropbox folder check
 def start_new_check(server_dropbox, folder_monitor):

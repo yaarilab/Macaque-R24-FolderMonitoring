@@ -12,8 +12,8 @@ from collections import defaultdict
 
 
 
-SOURCE_PATH = r"/misc/work/"
-#SOURCE_PATH = r"C:\Users\yaniv\Desktop"
+#SOURCE_PATH = r"/misc/work/"
+SOURCE_PATH = r"C:\Users\yaniv\Desktop"
 
 FOLDER_FOR_DOWNLOADS = os.path.join(SOURCE_PATH, "Dropbox/Macaque R24/sequencing/")
 METADATA_SCHEMA_PATH = os.path.join(SOURCE_PATH, 'Dropbox/Macaque R24/jsonFormats/schema.json')
