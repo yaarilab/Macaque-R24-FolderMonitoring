@@ -53,7 +53,7 @@ class FolderMonitor():
         self.add_one_for_genomic = False
         self.past_24_sample = []
         self.reset_excel_file = True
-        self.total_IGH = 0 
+        self.total_IGM = 0 
         self.total_IGL = 0 
         self.total_IGK = 0 
 
@@ -263,9 +263,9 @@ class FolderMonitor():
 
     def count_repertoires(self, base_path):
         subjects = os.listdir(base_path)
-        igh_subjects , igk_subjects, igl_subjects = 0, 0, 0
+        igm_subjects , igk_subjects, igl_subjects = 0, 0, 0
         for subject in subjects:
-            subject_has_igh, subject_has_igk, subject_has_igl = False, False, False
+            subject_has_igm, subject_has_igk, subject_has_igl = False, False, False
             if subject != "all_samples_file.txt":
                 subject_path = os.path.join(base_path, subject)
                 samples = os.listdir(subject_path)
@@ -277,8 +277,8 @@ class FolderMonitor():
                         files = os.listdir(run_path)
                         for file in files:
                             if 'igh' in file.lower():
-                                subject_has_igh = True
-                                self.total_IGH += 1
+                                subject_has_igm = True
+                                self.total_IGM += 1
                             elif 'igk' in file.lower():
                                 subject_has_igk = True
                                 self.total_IGK += 1
@@ -286,8 +286,8 @@ class FolderMonitor():
                                 subject_has_igl = True
                                 self.total_IGL += 1
             
-            if subject_has_igh:
-                igh_subjects += 1
+            if subject_has_igm:
+                igm_subjects += 1
             
             if subject_has_igk:
                 igk_subjects += 1
@@ -295,12 +295,12 @@ class FolderMonitor():
             if subject_has_igl:
                 igl_subjects += 1
         
-        self.create_repertoires_csv(igh_subjects ,igk_subjects, igl_subjects)
+        self.create_repertoires_csv(igm_subjects ,igk_subjects, igl_subjects)
 
 
 
-    def create_repertoires_csv(self, igh_count, igk_count, igl_count):
-        column_headers = ['IGH', 'IGL', 'IGK']
+    def create_repertoires_csv(self, igm_count, igk_count, igl_count):
+        column_headers = ['IgM', 'IGL', 'IGK']
 
         if os.path.exists(REPERTOIRES_CSV_FILE_PATH):
         # Delete the file
@@ -308,7 +308,7 @@ class FolderMonitor():
 
         df = pd.DataFrame(columns=column_headers)
         
-        data_row = {'IGH': igh_count, 'IGL': igl_count, 'IGK': igk_count}
+        data_row = {'IgM': igm_count, 'IGL': igl_count, 'IGK': igk_count}
         df = df.append(data_row, ignore_index=True)
 
         df.to_csv(REPERTOIRES_CSV_FILE_PATH, index=False)
@@ -345,7 +345,7 @@ class FolderMonitor():
 
         table3 = [
             ["Repertoires", ""],
-            ["IGH", f"{self.total_IGH}"],
+            ["IgM", f"{self.total_IGM}"],
             ["IGK", f"{self.total_IGK}"],
             ["IGL", f"{self.total_IGL}"]
         ]
