@@ -276,7 +276,7 @@ class FolderMonitor():
                         run_path = os.path.join(sample_path, run)
                         files = os.listdir(run_path)
                         for file in files:
-                            if 'igh' in file.lower():
+                            if 'igm' in file.lower():
                                 subject_has_igm = True
                                 self.total_IGM += 1
                             elif 'igk' in file.lower():
