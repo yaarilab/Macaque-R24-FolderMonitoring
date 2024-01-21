@@ -59,20 +59,24 @@ def start_new_check(server_dropbox, folder_monitor):
 
 def download_new_data_from_past_day(result, server_dropbox):
     past_day_subjects = []
-    if result.entries != []:
-            for entry in result.entries:
-                file_path = entry.path_display
-                local_path = os.path.join(FOLDER_FOR_DOWNLOADS, entry.name)
-                server_dropbox.download_entry(entry, local_path)
-                
-                if file_path in server_dropbox.download_list:
-                    print(f"Finished download {file_path}")
-                    past_day_subjects.append((SOURCE_PATH + file_path))
+    try:
+        if result.entries != []:
+                for entry in result.entries:
+                    file_path = entry.path_display
+                    local_path = os.path.join(FOLDER_FOR_DOWNLOADS, entry.name)
+                    server_dropbox.download_entry(entry, local_path)
+                    
+                    if file_path in server_dropbox.download_list:
+                        print(f"Finished download {file_path}")
+                        past_day_subjects.append((SOURCE_PATH + file_path))
 
-            print("Successfully downloaded all files")
+                print("Successfully downloaded all files")
 
-    else:
-        print("No new data from past day")
+        else:
+            print("No new data from past day")
+    
+    except Exception as e:
+        print(f"didng finish to donwload all samples because:{e}")
     
     return past_day_subjects
 
