@@ -2,7 +2,7 @@ import time
 import os
 import warnings
 import json
-from dropbox.exceptions import AuthError
+#from dropbox.exceptions import AuthError
 from FolderMonitor import FolderMonitor
 from ServerDropbox import ServerDropbox
 #from watchdog.observers import Observer

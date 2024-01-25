@@ -157,7 +157,7 @@ class FolderMonitor():
         missing_properties = ''
         row_number = -1
         for index, row in data.iterrows(): # Iterate through rows and write missing properties to the file
-            if row['Animal ID'] == subject_name:
+            if row['Sample ID'] == subject_name:
                 row_number = index +2
                 for req in required_properties:
                     if pd.isna(data[req][index]): #checking if cell is empty
@@ -262,10 +262,10 @@ class FolderMonitor():
                         all_pipeline_files.write(line_in_pipeline_file + "\n")
 
     def count_repertoires(self, base_path):
+        csv_list = []
         subjects = os.listdir(base_path)
-        igm_subjects , igk_subjects, igl_subjects = 0, 0, 0
         for subject in subjects:
-            subject_has_igm, subject_has_igk, subject_has_igl = False, False, False
+            subject_igm, subject_igk, subject_igl = 0, 0, 0
             if subject != "all_samples_file.txt":
                 subject_path = os.path.join(base_path, subject)
                 samples = os.listdir(subject_path)
@@ -277,39 +277,33 @@ class FolderMonitor():
                         files = os.listdir(run_path)
                         for file in files:
                             if 'igm' in file.lower():
-                                subject_has_igm = True
+                                subject_igm += 1
                                 self.total_IGM += 1
                             elif 'igk' in file.lower():
-                                subject_has_igk = True
+                                subject_igk += 1 
                                 self.total_IGK += 1
                             elif 'igl' in file.lower():
-                                subject_has_igl = True
+                                subject_igl += 1
                                 self.total_IGL += 1
-            
-            if subject_has_igm:
-                igm_subjects += 1
-            
-            if subject_has_igk:
-                igk_subjects += 1
-            
-            if subject_has_igl:
-                igl_subjects += 1
+
+            csv_list.append([subject, subject_igm/2.0, subject_igk/2.0, subject_igl/2.0])
         
-        self.create_repertoires_csv(igm_subjects ,igk_subjects, igl_subjects)
+        self.create_repertoires_csv(csv_list)
 
 
 
-    def create_repertoires_csv(self, igm_count, igk_count, igl_count):
-        column_headers = ['IgM', 'IGL', 'IGK']
+    def create_repertoires_csv(self, csv_list):
+        column_headers = ['Subject','IgM', 'IGL', 'IGK']
 
         if os.path.exists(REPERTOIRES_CSV_FILE_PATH):
         # Delete the file
             os.remove(REPERTOIRES_CSV_FILE_PATH)
 
         df = pd.DataFrame(columns=column_headers)
-        
-        data_row = {'IgM': igm_count, 'IGL': igl_count, 'IGK': igk_count}
-        df = df.append(data_row, ignore_index=True)
+        data = [{'Subject': item[0], 'IgM': item[1], 'IGK': item[2], 'IGL': item[3]} for item in csv_list]
+
+        # Convert the list of dictionaries to a DataFrame
+        df = pd.DataFrame(data, columns=column_headers)
 
         df.to_csv(REPERTOIRES_CSV_FILE_PATH, index=False)
 
@@ -325,6 +319,7 @@ class FolderMonitor():
         self.send_slack_message("```\n" + table1 + "\n```")
         self.send_slack_message("```\n" + table2 + "\n```")
         self.send_slack_message("```\n" + table3 + "\n```")
+        self.send_slack_message("```\n" + "for further information, please see csv files in Dropbox/Macaque R24/results." + "\n```")
         
 
 
