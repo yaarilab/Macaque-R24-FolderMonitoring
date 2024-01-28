@@ -286,7 +286,7 @@ class FolderMonitor():
                                 subject_igl += 1
                                 self.total_IGL += 1
 
-            csv_list.append([subject, subject_igm/2.0, subject_igk/2.0, subject_igl/2.0])
+                csv_list.append([subject, subject_igm/2.0, subject_igk/2.0, subject_igl/2.0])
         
         self.create_repertoires_csv(csv_list)
 
